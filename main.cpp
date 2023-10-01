@@ -9,30 +9,38 @@ long unsigned int get_file_size(std::ifstream *input) {
   return file_size;
 }
 
+uint32_t get_file_id(std::ifstream *input) {
+  input->seekg(0, std::ios::beg);
+  char file_id[4];
+  input->read(file_id, 4);
+  uint32_t file_id_int = file_id[3] << 24 |
+                         file_id[2] << 16 |
+                         file_id[1] << 8  |
+                         file_id[0];
+  return file_id_int;
+}
+
+uint16_t get_protocol_version(std::ifstream *input) {
+  input->seekg(4, std::ios::beg);
+  char protocol_version[2];
+  input->read(protocol_version, 2);
+  uint16_t protocol_version_int = protocol_version[1] << 8 |
+                                  protocol_version[0];
+  return protocol_version_int;
+}
+
 int write_header(std::ifstream *input, FILE *output, long unsigned int &bytes_seeked) {
-  char header[7];
-  bytes_seeked = 6;
-
-  input->read(header, bytes_seeked);
-  header[6] = '\0';
-
-  uint32_t file_id = header[3] << 24 |
-                     header[2] << 16 |
-                     header[1] << 8  |
-                     header[0];
-
-  // It seems Bombsquad ignores the 6th byte (last byte of protocol version)
-  // for some reason.
-  uint16_t protocol_version = header[5] << 8 |
-                              header[4];
-
+  uint32_t file_id = get_file_id(input);
   fwrite(&file_id, sizeof(file_id), 1, output);
+  uint16_t protocol_version = get_protocol_version(input);
   fwrite(&protocol_version, sizeof(protocol_version), 1, output);
+  bytes_seeked = 6;
   return 0;
 }
 
 int write_decompressed_data(std::ifstream *input, FILE *output, long unsigned int &bytes_seeked, long unsigned int file_size) {
   std::vector<uint8_t> message;
+  input->seekg(bytes_seeked, std::ios::beg);
   while (bytes_seeked < file_size) {
     unsigned char initial_message_size_byte;
     long unsigned int message_size;
@@ -109,10 +117,7 @@ int decompress_replay_file(char *input_path, char *output_path) {
   long unsigned int bytes_seeked = 0;
 
   write_header(&input, output, bytes_seeked);
-
   long unsigned int file_size = get_file_size(&input);
-  input.seekg(bytes_seeked, std::ios::beg);
-
   write_decompressed_data(&input, output, bytes_seeked, file_size);
 
   input.close();
