@@ -7,6 +7,7 @@
 
 ```bash
 $ git clone https://github.com/ritiek/bs-replay-analyzer
+$ cd ./bs-replay-analyzer
 $ make
 ```
 
