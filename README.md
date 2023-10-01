@@ -25,6 +25,6 @@ play fine since the game can read both Huffman encoded replay files as well as r
 
 ## License
 
-[huffman.cpp], [huffman.h] are stripped off versions from the core game ([here](https://github.com/efroemling/ballistica/blob/50f91361f41c69cc4e87eeba32217ff9558ada3e/src/ballistica/base/support/huffman.cc), and [here](https://github.com/efroemling/ballistica/blob/master/src/ballistica/base/support/huffman.h) respectively), and are [originally licensed under MIT](https://github.com/efroemling/ballistica/blob/50f91361f41c69cc4e87eeba32217ff9558ada3e/LICENSE).
+[huffman.cpp](/src/huffman.cpp), [huffman.h](/src/huffman.h) are stripped off versions from the core game ([here](https://github.com/efroemling/ballistica/blob/50f91361f41c69cc4e87eeba32217ff9558ada3e/src/ballistica/base/support/huffman.cc), and [here](https://github.com/efroemling/ballistica/blob/master/src/ballistica/base/support/huffman.h) respectively), and are [originally licensed under MIT](https://github.com/efroemling/ballistica/blob/50f91361f41c69cc4e87eeba32217ff9558ada3e/LICENSE).
 
-All other code in this repository is also licensed under MIT.
+All other code in this repository is also licensed under MIT. See [LICENSE](/LICENSE) for more info.
