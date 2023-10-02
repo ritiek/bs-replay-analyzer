@@ -111,7 +111,7 @@ int write_decompressed_data(std::ifstream *input, FILE *output, long unsigned in
   return 0;
 }
 
-int decompress_replay_file(char *input_path, char *output_path) {
+extern "C" int decompress_replay_file(char *input_path, char *output_path) {
   std::ifstream input(input_path, std::ios::binary);
   FILE *output = fopen(output_path, "wb");
   long unsigned int bytes_seeked = 0;
