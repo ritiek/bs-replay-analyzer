@@ -16,7 +16,7 @@ lib :
 	ar rcs $(LIB)/libdecompress.a $(LIB)/huffman.o $(LIB)/main.o
 	$(GNU) $(ARGS) $(OPTIMIZATIONS) $(LIB)/libdecompress.a -o $(LIB)/libdecompress.so
 
-bin :
+bin : lib
 	mkdir -p $(BIN)
 # $(GNU) $(OPTIMIZATIONS) $(SRC)/huffman.cpp $(SRC)/main.cpp -o $(BIN)/decompress
 	$(GNU) $(ARGS) $(OPTIMIZATIONS) $(LIB)/libdecompress.a -o $(BIN)/decompress
