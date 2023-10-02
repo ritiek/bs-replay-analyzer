@@ -13,9 +13,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: make
-      run: make
     - name: make lib
       run: make lib
+    - name: make bin
+      run: make bin
     - name: make clean
       run: make clean
+    - name: make all
+      run: make all
