@@ -66,7 +66,7 @@ int write_decompressed_data(std::ifstream *input, FILE *output, long unsigned in
     }
     unsigned char byte;
     if (message_size > 0) {
-      for (int i=0; i<message_size; i++) {
+      for (unsigned long int i=0; i<message_size; i++) {
         input->read(reinterpret_cast<char *>(&byte), 1);
         message.push_back(byte);
       }

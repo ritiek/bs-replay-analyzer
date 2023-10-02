@@ -25,8 +25,6 @@
 
 // Yes, I should clean this up to use unsigned vals, but it seems to work
 // fine for now so I don't want to touch it.
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "hicpp-signed-bitwise"
 
 // how much data we read in training mode before spitting out results
 const int kTrainingLength = 200000;
@@ -50,16 +48,6 @@ static int g_freqs[] = {
     0,      0,    0,    0,    0, 0,    0, 0, 0,    0,    0, 0, 0, 0,    0, 0,
     0,      0,    0,    0,    0, 0,    0, 0, 0,    0,    0, 0, 0, 0,    0, 0,
     0,      0,    0,    0,    0, 0,    0, 0, 0,    0,    0, 0, 0, 0,    0, 0};
-
-static void DoWriteBits(char** ptr, int* bit, int val, int val_bits) {
-  int src_bit = 0;
-  while (src_bit < val_bits) {
-    **ptr |= ((val >> src_bit) & 0x01) << (*bit);  // NOLINT
-    if ((*bit) == 7) (*ptr)++;
-    (*bit) = ((*bit) + 1) % 8;
-    src_bit++;
-  }
-}
 
 Huffman::Huffman() : built(false) {
   static_assert(sizeof(g_freqs) == sizeof(int) * 256);
@@ -304,5 +292,3 @@ void Huffman::build() {
   //   std::cout << nodes_[x].val << ": " << nodes_[x].frequency << std::endl;
   // }
 }
-
-#pragma clang diagnostic pop
