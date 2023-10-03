@@ -28,7 +28,7 @@
 // #include "ballistica/core/object.h"
 
 class Huffman {
- public:
+public:
   Huffman();
   ~Huffman();
 
@@ -40,9 +40,11 @@ class Huffman {
   // (see details in implementation).
   auto compress(const std::vector<uint8_t>& src) -> std::vector<uint8_t>;
   auto decompress(const std::vector<uint8_t>& src) -> std::vector<uint8_t>;
-  auto get_built() const -> bool { return built; }
+  auto get_built() const -> bool {
+    return built;
+  }
 
- private:
+private:
   bool built;
   uint32_t test_bytes = 0;
   uint32_t test_bits_compressed = 0;
@@ -50,7 +52,7 @@ class Huffman {
   int total_length = 0;
 
   class Node {
-   public:
+  public:
     Node() = default;
 
     // Left child index in node array (-1 for none).
