@@ -8,3 +8,5 @@ edition = "2021"
 cc = "1.0"
 
 [dependencies]
+rust-strings = "0.4"
+serde_json = "1.0"
