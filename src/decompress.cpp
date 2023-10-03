@@ -1,7 +1,4 @@
-#include <fstream>
-#include <cstring>
-
-#include "huffman.h"
+#include "decompress.h"
 
 long unsigned int get_file_size(std::ifstream *input) {
   input->seekg(0, std::ios::end);
