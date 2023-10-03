@@ -19,7 +19,7 @@ lib :
 bin : lib
 	mkdir -p $(BIN)
 # $(GNU) $(OPTIMIZATIONS) $(SRC)/huffman.cpp $(SRC)/decompress.cpp -o $(BIN)/decompress
-	$(GNU) $(ARGS) $(OPTIMIZATIONS) $(LIB)/libdecompress.a -o $(BIN)/decompress
+	$(GNU) $(ARGS) $(OPTIMIZATIONS) $(SRC)/main.cpp $(LIB)/libdecompress.a -o $(BIN)/decompress
 
 clean :
 	rm -f $(LIB)/huffman.o
