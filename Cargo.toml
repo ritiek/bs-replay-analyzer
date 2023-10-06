@@ -1,5 +1,5 @@
 [package]
-name = "rust-replay"
+name = "bs-replay-analyzer"
 version = "0.1.0"
 edition = "2021"
 
