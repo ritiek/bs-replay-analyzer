@@ -3,7 +3,7 @@ use std::error::Error;
 use std::path::PathBuf;
 use std::process::ExitCode;
 
-use bs_replay_analyzer::Replay;
+use bs_replay_analyzer::{Header, Replay};
 
 fn main() -> Result<ExitCode, Box<dyn Error>> {
     let args: Vec<String> = env::args().collect();
@@ -19,9 +19,13 @@ fn main() -> Result<ExitCode, Box<dyn Error>> {
     let output_path = PathBuf::from(&args[2]);
 
     let replay = Replay::new(input_path);
+    let header = replay.get_header()?;
+    println!("File ID: {}", header.file_id);
+    println!("Protocol Version: {}", header.protocol_version);
+    println!();
+
     let mut decompressed_replay = unsafe { replay.decompress(output_path)? };
     let processed_strings = decompressed_replay.process_strings()?;
-
     for player_name in &processed_strings.player_names {
         println!("{}", player_name);
     }

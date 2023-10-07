@@ -3,6 +3,7 @@ use std::ffi::CString;
 use std::path::PathBuf;
 
 use super::decompressed_replay::DecompressedReplay;
+use super::replay_header::Header;
 
 #[link(name = "decompress")]
 extern "C" {
@@ -21,7 +22,7 @@ impl Replay {
 
     /// # Safety
     ///
-    /// This function is unsafe because it calls a C++ function.
+    /// This function is unsafe because it calls a C function.
     pub unsafe fn decompress(&self, output: PathBuf) -> Result<DecompressedReplay, Box<dyn Error>> {
         let input_file = CString::new(
             self.path
@@ -37,5 +38,11 @@ impl Replay {
             decompress_replay_file(input_file.as_ptr(), output_file.as_ptr());
         }
         Ok(DecompressedReplay::new(output))
+    }
+}
+
+impl Header for Replay {
+    fn get_path(&self) -> PathBuf {
+        self.path.clone()
     }
 }
