@@ -1,3 +1,6 @@
 /target
-/libdecompress/bin
-/libdecompress/lib
+
+/libanalyze/target
+
+/libanalyze/libdecompress/bin
+/libanalyze/libdecompress/lib
