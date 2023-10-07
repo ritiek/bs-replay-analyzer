@@ -1,5 +1,5 @@
 GNU ?= g++
-ARGS ?= -Wall
+ARGS ?= -Wall -g
 OPTIMIZATIONS ?= -O2
 
 SRC = ./src
@@ -18,7 +18,7 @@ lib :
 
 bin : lib
 	mkdir -p $(BIN)
-# $(GNU) $(OPTIMIZATIONS) $(SRC)/huffman.cpp $(SRC)/decompress.cpp -o $(BIN)/decompress
+	# $(GNU) $(ARGS) $(OPTIMIZATIONS) $(SRC)/main.cpp $(SRC)/huffman.cpp $(SRC)/decompress.cpp -o $(BIN)/decompress
 	$(GNU) $(ARGS) $(OPTIMIZATIONS) $(SRC)/main.cpp $(LIB)/libdecompress.a -o $(BIN)/decompress
 
 clean :

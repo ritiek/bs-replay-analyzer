@@ -1,61 +1,82 @@
 #include "decompress.h"
 
-long unsigned int get_file_size(std::ifstream *input) {
-  input->seekg(0, std::ios::end);
-  long unsigned int file_size = input->tellg();
-  return file_size;
+Replay::Replay(char *input_path) {
+  // std::ifstream input(input_path, std::ios::binary);
+  // this->input = &input;
+  std::ifstream *input = new std::ifstream(input_path, std::ios::binary);
+  this->input = input;
 }
 
-uint32_t get_file_id(std::ifstream *input) {
-  input->seekg(0, std::ios::beg);
+Replay::~Replay() {
+  this->input->close();
+}
+
+ReplayHeader Replay::get_header() {
+  this->input->seekg(0, std::ios::beg);
   char file_id[4];
-  input->read(file_id, 4);
+  this->input->read(file_id, 4);
   uint32_t file_id_int = file_id[3] << 24 |
                          file_id[2] << 16 |
                          file_id[1] << 8  |
                          file_id[0];
-  return file_id_int;
-}
 
-uint16_t get_protocol_version(std::ifstream *input) {
-  input->seekg(4, std::ios::beg);
+  this->input->seekg(4, std::ios::beg);
   char protocol_version[2];
-  input->read(protocol_version, 2);
+  this->input->read(protocol_version, 2);
   uint16_t protocol_version_int = protocol_version[1] << 8 |
                                   protocol_version[0];
-  return protocol_version_int;
+
+  return ReplayHeader {
+    file_id_int,
+    protocol_version_int,
+  };
 }
 
-int write_header(std::ifstream *input, FILE *output, long unsigned int &bytes_seeked) {
-  uint32_t file_id = get_file_id(input);
-  fwrite(&file_id, sizeof(file_id), 1, output);
-  uint16_t protocol_version = get_protocol_version(input);
-  fwrite(&protocol_version, sizeof(protocol_version), 1, output);
-  bytes_seeked = 6;
+long unsigned int Replay::get_file_size() {
+  this->input->seekg(0, std::ios::end);
+  long unsigned int file_size = this->input->tellg();
+  this->input->seekg(this->bytes_seeked, std::ios::beg);
+  return file_size;
+}
+
+int Replay::decompress_to(char *output_path) {
+  FILE *output = fopen(output_path, "wb");
+  this->write_header(output);
+  this->write_decompressed_data(output);
+  fclose(output);
   return 0;
 }
 
-int write_decompressed_data(std::ifstream *input, FILE *output, long unsigned int &bytes_seeked, long unsigned int file_size) {
+int Replay::write_header(FILE *output) {
+  ReplayHeader header = this->get_header();
+  fwrite(&header.file_id, sizeof(header.file_id), 1, output);
+  fwrite(&header.protocol_version, sizeof(header.protocol_version), 1, output);
+  this->bytes_seeked = sizeof(header.file_id) + sizeof(header.protocol_version);
+  return 0;
+}
+
+int Replay::write_decompressed_data(FILE *output) {
   std::vector<uint8_t> message;
-  input->seekg(bytes_seeked, std::ios::beg);
-  while (bytes_seeked < file_size) {
+  long unsigned int file_size = this->get_file_size();
+
+  while (this->bytes_seeked < file_size) {
     unsigned char initial_message_size_byte;
     long unsigned int message_size;
     unsigned char remaining_bytes[5];
     remaining_bytes[4] = '\0';
-    input->read(reinterpret_cast<char *>(&initial_message_size_byte), 1);
-    bytes_seeked += 1;
+    this->input->read(reinterpret_cast<char *>(&initial_message_size_byte), 1);
+    this->bytes_seeked += 1;
 
     if (initial_message_size_byte < 254) {
       message_size = initial_message_size_byte;
     } else if (initial_message_size_byte == 254) {
-      input->read(reinterpret_cast<char *>(remaining_bytes), 2);
-      bytes_seeked += 2;
+      this->input->read(reinterpret_cast<char *>(remaining_bytes), 2);
+      this->bytes_seeked += 2;
       message_size = remaining_bytes[1] << 8 |
                      remaining_bytes[0];
     } else {
-      input->read(reinterpret_cast<char *>(remaining_bytes), 4);
-      bytes_seeked += 4;
+      this->input->read(reinterpret_cast<char *>(remaining_bytes), 4);
+      this->bytes_seeked += 4;
       message_size = remaining_bytes[3] << 24 |
                      remaining_bytes[2] << 16 |
                      remaining_bytes[1] << 8 |
@@ -64,10 +85,10 @@ int write_decompressed_data(std::ifstream *input, FILE *output, long unsigned in
     unsigned char byte;
     if (message_size > 0) {
       for (unsigned long int i=0; i<message_size; i++) {
-        input->read(reinterpret_cast<char *>(&byte), 1);
+        this->input->read(reinterpret_cast<char *>(&byte), 1);
         message.push_back(byte);
       }
-      bytes_seeked += message_size;
+      this->bytes_seeked += message_size;
       Huffman huffman;
       std::vector<uint8_t> result = huffman.decompress(message);
 
@@ -109,16 +130,7 @@ int write_decompressed_data(std::ifstream *input, FILE *output, long unsigned in
 }
 
 extern "C" int decompress_replay_file(char *input_path, char *output_path) {
-  std::ifstream input(input_path, std::ios::binary);
-  FILE *output = fopen(output_path, "wb");
-  long unsigned int bytes_seeked = 0;
-
-  write_header(&input, output, bytes_seeked);
-  long unsigned int file_size = get_file_size(&input);
-  write_decompressed_data(&input, output, bytes_seeked, file_size);
-
-  input.close();
-  fclose(output);
-
+  Replay replay = Replay(input_path);
+  replay.decompress_to(output_path);
   return 0;
 }
