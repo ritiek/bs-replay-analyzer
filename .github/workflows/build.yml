@@ -13,13 +13,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: Makefile
-      working-directory: ./libdecompress
+    - name: libdecompress
+      working-directory: ./libanalyze/libdecompress
       run: |
         make lib
         make bin
         make clean
         make all
-    - name: Cargo
+    - name: libanalyze
+      working-directory: ./libanalyze
+      run: |
+        cargo clippy
+    - name: analyzer
       run: |
         cargo clippy
