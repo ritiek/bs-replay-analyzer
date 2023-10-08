@@ -1,6 +1,9 @@
 /target
 
 /libanalyze/target
+# `libanalyze` is supposed to be used as a library. `main.rs`
+# is only for rapid testing. 
+/libanalyze/Cargo.lock
 
 /libanalyze/libdecompress/bin
 /libanalyze/libdecompress/lib
