@@ -5,5 +5,5 @@
 # is only for rapid testing. 
 /libanalyze/Cargo.lock
 
-/libanalyze/libdecompress/bin
-/libanalyze/libdecompress/lib
+/libanalyze/libbrp/lib
+/libanalyze/libbrp/examples/decompress
