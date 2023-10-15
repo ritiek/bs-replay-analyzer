@@ -1,0 +1,3 @@
+[submodule "libanalyze/libbrp"]
+	path = libanalyze/libbrp
+	url = https://github.com/ritiek/libbrp.git

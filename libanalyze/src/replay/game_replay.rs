@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use super::decompressed_replay::DecompressedReplay;
 use super::replay_header::Header;
 
-#[link(name = "decompress")]
+#[link(name = "brp")]
 extern "C" {
     fn decompress_replay_file(input_path: *const i8, output_path: *const i8) -> u16;
 }
