@@ -13,13 +13,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: libdecompress
-      working-directory: ./libanalyze/libdecompress
-      run: |
-        make lib
-        make bin
-        make clean
-        make all
     - name: libanalyze
       working-directory: ./libanalyze
       run: |
