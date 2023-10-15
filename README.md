@@ -7,6 +7,7 @@ Does some magic. ✨
 ```bash
 $ git clone https://github.com/ritiek/bs-replay-analyzer
 $ cd ./bs-replay-analyzer
+$ git submodule update --init --recursive
 $ cargo build
 ```
 
