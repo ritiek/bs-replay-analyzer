@@ -8,8 +8,8 @@ async fn main() -> Result<(), Error> {
     //     .run(app)
     //     .await
 
-    // $ curl --form file=@$HOME/.bombsquad/replays/encoded.brp http://127.0.0.1:3000/upload
-    let app = Route::new().at("/upload", post(analyzer_frontend::upload));
+    // $ curl --form file=@$HOME/.bombsquad/replays/__lastReplay.brp http://127.0.0.1:3000/
+    let app = Route::new().at("/", post(analyzer_frontend::upload));
     Server::new(TcpListener::bind("127.0.0.1:3000"))
         .run(app)
         .await

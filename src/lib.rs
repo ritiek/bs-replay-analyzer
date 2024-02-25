@@ -2,10 +2,10 @@ use async_tempfile::TempFile;
 use libanalyze::{Header, Replay};
 
 use poem::{
-    error::{BadRequest, ParseMultipartError},
+    error::{BadRequest, ParseMultipartError, GetDataError},
     handler,
     web::Multipart,
-    Request, Result,
+    Request, Result
 };
 use std::env;
 use tokio::io::AsyncReadExt;
@@ -16,6 +16,10 @@ use std::{thread, time};
 use tokio::io::AsyncBufReadExt;
 use tokio::io::AsyncWriteExt;
 use tokio::io::{BufReader, BufWriter};
+
+use brp_tool::{BaMessage,};
+use brp_tool::async_brp::{get_header, load_replay_message};
+use brp_tool::error::BrpError;
 
 // #[handler]
 // pub fn hello(Path(name): Path<String>) -> String {
@@ -65,87 +69,114 @@ pub async fn upload(request: &Request, mut multipart: Multipart) -> Result<()> {
             })?
             .to_string();
 
-        let mut replay_content = BufReader::with_capacity(BUF_SIZE, field.into_async_read());
+        // let mut replay_content = BufReader::with_capacity(BUF_SIZE, field.into_async_read());
 
-        let file_id_le = {
-            let mut file_id_le: [u8; 4] = [0; 4];
-            replay_content
-                .read_exact(&mut file_id_le)
-                .await
-                .map_err(|e| {
-                    let response = format!("Could not parse file id: {}", e);
-                    ParseMultipartError::InvalidContentType(response)
-                })?;
-            file_id_le
-        };
-        let file_id = u32::from_le_bytes(file_id_le);
+        // let replay = load_replay(replay_content);
 
-        if file_id != libanalyze::FILE_ID {
-            let response = format!("Invalid file id: {}", file_id);
-            return Err(ParseMultipartError::InvalidContentType(response).into());
-        }
+        let mut stream = field.into_async_read();
 
-        let protocol_version_le = {
-            let mut protocol_version_le: [u8; 2] = [0; 2];
-            replay_content
-                .read_exact(&mut protocol_version_le)
-                .await
-                .map_err(|e| {
-                    let response = format!("Could not parse protocol version: {}", e);
-                    ParseMultipartError::InvalidContentType(response)
-                })?;
-            protocol_version_le
-        };
-        let protocol_version = u16::from_le_bytes(protocol_version_le);
+        let header = get_header(&mut stream)
+            .await
+            .map_err(|e| {
+                ParseMultipartError::InvalidContentType(e.to_string())
+            })?;
 
-        if protocol_version != libanalyze::PROTOCOL_VERSION {
-            let response = format!("Invalid protocol version: {}", protocol_version);
-            return Err(ParseMultipartError::InvalidContentType(response).into());
-        }
+        dbg!(header.file_id);
+        dbg!(header.protocol_version);
 
-        let temp_dir = env::temp_dir();
-        let temp_replay_dir = Path::new(&temp_dir).join("bombsquad-replay-analysis");
-        tokio::fs::create_dir_all(&temp_replay_dir).await.unwrap();
-
-        let random_chars = std::iter::repeat_with(|| fastrand::alphanumeric())
-            .take(5)
-            .collect::<String>();
-
-        let mut file = TempFile::new_with_name_in(
-            format!("{}_{}", file_name, random_chars).as_str(),
-            temp_replay_dir,
-        )
-        .await
-        .unwrap()
-        .open_rw()
-        .await
-        .unwrap();
-
-        let mut writer = BufWriter::with_capacity(BUF_SIZE, &mut file);
-        writer.write(&file_id_le).await.unwrap();
-        writer.write(&protocol_version_le).await.unwrap();
+        let mut message: BaMessage;
 
         loop {
-            let chunk = replay_content.fill_buf().await.unwrap();
-            let chunk_length = chunk.len();
-            if chunk_length == 0 {
-                break;
-            }
-            writer.write(chunk).await.unwrap();
-            replay_content.consume(chunk_length);
+            let message = load_replay_message(&mut stream).await;
+            match message {
+                Ok(m) => {},
+                Err(_) => break,
+            };
         }
 
-        writer.flush().await.unwrap();
+        // TODO: Gotta reuse the stream to also write it to a .brp file..
+        // stream.seek(0);
+        println!("done!!");
 
-        // let duration = time::Duration::from_secs(30);
-        // thread::sleep(duration);
+        // let file_id_le = {
+        //     let mut file_id_le: [u8; 4] = [0; 4];
+        //     replay_content
+        //         .read_exact(&mut file_id_le)
+        //         .await
+        //         .map_err(|e| {
+        //             let response = format!("Could not parse file id: {}", e);
+        //             ParseMultipartError::InvalidContentType(response)
+        //         })?;
+        //     file_id_le
+        // };
+        // let file_id = u32::from_le_bytes(file_id_le);
         //
-        let replay = Replay::new(file.file_path().to_path_buf());
-        // let header = replay.get_header()?;
-
-        let output_path = PathBuf::from("test.brp");
-        // FIXME: This is io blocking
-        let mut decompressed_replay = unsafe { replay.decompress(output_path) };
+        // if file_id != libanalyze::FILE_ID {
+        //     let response = format!("Invalid file id: {}", file_id);
+        //     return Err(ParseMultipartError::InvalidContentType(response).into());
+        // }
+        //
+        // let protocol_version_le = {
+        //     let mut protocol_version_le: [u8; 2] = [0; 2];
+        //     replay_content
+        //         .read_exact(&mut protocol_version_le)
+        //         .await
+        //         .map_err(|e| {
+        //             let response = format!("Could not parse protocol version: {}", e);
+        //             ParseMultipartError::InvalidContentType(response)
+        //         })?;
+        //     protocol_version_le
+        // };
+        // let protocol_version = u16::from_le_bytes(protocol_version_le);
+        //
+        // if protocol_version != libanalyze::PROTOCOL_VERSION {
+        //     let response = format!("Invalid protocol version: {}", protocol_version);
+        //     return Err(ParseMultipartError::InvalidContentType(response).into());
+        // }
+        //
+        // let temp_dir = env::temp_dir();
+        // let temp_replay_dir = Path::new(&temp_dir).join("bombsquad-replay-analysis");
+        // tokio::fs::create_dir_all(&temp_replay_dir).await.unwrap();
+        //
+        // let random_chars = std::iter::repeat_with(|| fastrand::alphanumeric())
+        //     .take(5)
+        //     .collect::<String>();
+        //
+        // let mut file = TempFile::new_with_name_in(
+        //     format!("{}_{}", file_name, random_chars).as_str(),
+        //     temp_replay_dir,
+        // )
+        // .await
+        // .unwrap()
+        // .open_rw()
+        // .await
+        // .unwrap();
+        //
+        // let mut writer = BufWriter::with_capacity(BUF_SIZE, &mut file);
+        // writer.write(&file_id_le).await.unwrap();
+        // writer.write(&protocol_version_le).await.unwrap();
+        //
+        // loop {
+        //     let chunk = replay_content.fill_buf().await.unwrap();
+        //     let chunk_length = chunk.len();
+        //     if chunk_length == 0 {
+        //         break;
+        //     }
+        //     writer.write(chunk).await.unwrap();
+        //     replay_content.consume(chunk_length);
+        // }
+        //
+        // writer.flush().await.unwrap();
+        //
+        // // let duration = time::Duration::from_secs(30);
+        // // thread::sleep(duration);
+        // //
+        // let replay = Replay::new(file.file_path().to_path_buf());
+        // // let header = replay.get_header()?;
+        //
+        // let output_path = PathBuf::from("test.brp");
+        // // FIXME: This is io blocking
+        // let mut decompressed_replay = unsafe { replay.decompress(output_path) };
     }
     Ok(())
 }
